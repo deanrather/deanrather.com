@@ -1,0 +1,193 @@
+<html>
+<!--
+
+Randomly displays images from a selection of Google Photo Albums.
+
+Usage:
+- Go to http://photos.google.com
+- Click on: More -> Albums
+- Get the URLs to your selected Albums (Make sure they're public!)
+- Put the Interval between slides (in seconds) and the URLs into the URI like this:
+
+    http://deanrather.com/slideshow#INTERVAL_SECONDS|ALBUM_URL,ALBUM_URL...
+
+eg:
+
+    http://deanrather.com/slideshow#6|https://plus.google.com/photos/114422221272941024201/albums/6067290589046854321,https://plus.google.com/photos/114422221272941024201/albums/6067559740819782033
+
+-->
+<head>
+    <title>pics</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script>
+    $(document).ready(function() {
+
+        var interval;                // Number of milliseconds between pics
+        var timeoutID;               // ID of the waiting timeout
+        var nextImageIndex = 0;      // Index of the next image to preload
+        var images = [];             // List of images to cycle through
+
+        function getVariables()
+        {
+            
+            var interval_seconds;
+            var urls;
+            
+            if($(location).attr('hash'))
+            {
+                interval_seconds    = $(location).attr('hash').split('|')[0].split('#')[1];
+                urls                = $(location).attr('hash').split('|')[1].split(',');
+            }
+            
+            if ( ! interval_seconds || interval_seconds  < 3 )
+            {
+                interval_seconds = 600;
+            }
+            
+            if (! urls )
+            {
+                urls = [
+                    'https://plus.google.com/photos/114422221272941024201/albums/6067290589046854321',
+                    'https://plus.google.com/photos/114422221272941024201/albums/6067559740819782033'
+                ];
+            }
+            
+            interval = interval_seconds * 1000;
+            images = getImageList(urls);
+            
+            console.log("Interval: ", interval_seconds, " seconds");
+            console.log("Images: ", images);
+            
+        }
+        
+        //+ Jonas Raoni Soares Silva
+        //@ http://jsfromhell.com/array/shuffle [v1.0]
+        function shuffle(o){ //v1.0
+            for(var j, x, i = o.length; i; j = Math.floor(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+            return o;
+        };
+
+        function getImageList(urls)
+        {
+            var images = [];
+            for(var i=0; i<urls.length; i++)
+            {
+                var user_id = urls[i].split('/')[4];
+                var album_id = urls[i].split('/')[6];
+
+                var api_url = "https://picasaweb.google.com/data/feed/api"
+                    + "/user/" + user_id
+                    + "/albumid/" + album_id
+                    + "?alt=json";
+
+                $.ajax({
+                    type: 'GET',
+                    url: api_url,
+                    dataType: 'json',
+                    async: false,
+                    success: function(response) {
+                        images = images.concat(response.feed.entry);
+                    },
+                    error: function(response)
+                    {
+                        console.log('error:', response);
+                    }
+                });
+            }
+
+            images = shuffle(images);
+
+            return images;
+        }
+        // Changes the photo to the preloaded photo, 
+        // preloads the next photo,
+        // sets a timeout to call this function again after a timeout
+        function changePhoto()
+        {
+            // Clear any existing timeout
+            clearTimeout(timeoutID);
+
+            // Swap visible photo with preloaded photo
+            $('.visible').attr('src', $('.preload').attr('src') );
+
+            // Get the next image from the list
+            while(images[nextImageIndex]['gphoto$width']['$t'] < images[nextImageIndex]['gphoto$height']['$t'])
+            {
+                console.log('Skipping: ', images[nextImageIndex]);
+                nextImageIndex++;
+            }
+
+            var img_height = images[nextImageIndex]['gphoto$height']['$t'];
+            var img_url = images[nextImageIndex].content.src;
+            nextImageIndex++;
+
+            // Change the Image URL to match the Screen Width
+            var img_url_parts = img_url.split('/');
+            var img_url = img_url_parts[0]
+                + '/' + img_url_parts[1]
+                + '/' + img_url_parts[2]
+                + '/' + img_url_parts[3]
+                + '/' + img_url_parts[4]
+                + '/' + img_url_parts[5]
+                + '/' + img_url_parts[6]
+                + "/s" + window.screen.availWidth
+                + '/' + img_url_parts[7];
+
+            // Preload the Image
+            console.log("Preloading: ", img_url);
+            $('.preload').attr('src', img_url);
+
+            // If this is the initial image
+            if(nextImageIndex === 1)
+            {
+                // Display it straight away
+                changePhoto();
+            }
+            else
+            {
+                // Change Photo again after an interval
+                timeoutID = setTimeout(changePhoto, interval);
+            }
+        }
+
+
+        // --- Hooks ---
+
+        // Initial Load
+        console.log('initial load');
+        getVariables();
+        changePhoto();
+
+        // On Click
+        $('.visible').click( function() {
+            console.log('clicked');
+            changePhoto();
+        });
+
+        // On Hash Change
+        $(window).bind('hashchange', function(){
+            console.log('hashchanged');
+            getVariables();
+            changePhoto();
+        });
+
+    });
+    </script>
+    <style>
+        body {margin: 0; padding: 0; overflow: hidden;}
+        .visible {width: 100%;}
+        .preload {display: none;}
+    </style>
+</head>
+<body>
+    <img class="visible">
+    <img class="preload">
+</body>
+<!--
+Resources:
+https://play.google.com/store/apps/details?id=uk.co.liamnewmarch.daydream
+https://gist.github.com/arthurnn/1204385
+http://stackoverflow.com/questions/15183212/google-plus-album-urls
+https://plus.google.com/u/0/photos/114422221272941024201/albums/6067290589046854321
+-->
+</html>
