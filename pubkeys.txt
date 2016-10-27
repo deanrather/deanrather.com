@@ -1,3 +1,9 @@
+# Dean Rather's Pubkeys
+# add with:
+#
+#    wget -O - deanrather.com/pubkeys.txt >> ~/.ssh/authorized_keys
+# 
+
 # Dean's Home Desktop (Windows)
 ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAIBS8UqM02ztwqt9+tTgHR7+v4nrdVT2HgQzVY4f1X1ZzNIgXSiD6F8xhgnl5knHRXHTjt932VxmYvjnQXvDAkuTquFpskSY7OK/tUSaM6EmD16BTJsI+w8f24mZsHl4jnCWXq/LKX+5oajvxJLq8dDN77FsaJPW8D6TK4VA6V3xbQ== rsa-key-20160616
 
