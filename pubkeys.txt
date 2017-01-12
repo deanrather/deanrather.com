@@ -1,7 +1,7 @@
 # Dean Rather's Pubkeys
 # add with:
 #
-#    wget -O - deanrather.com/pubkeys.txt >> ~/.ssh/authorized_keys
+#    curl deanrather.com/pubkeys.txt >> ~/.ssh/authorized_keys
 # 
 
 # Dean's Home Desktop (Windows)
